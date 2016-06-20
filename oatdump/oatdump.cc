@@ -1565,8 +1565,7 @@ class ImageDumper {
     stats_.alignment_bytes += bitmap_section.Offset() - image_header_.GetImageSize();
     stats_.bitmap_bytes += bitmap_section.Size();
     stats_.art_field_bytes += field_section.Size();
-    // RoundUp to 8 bytes to match the intern table alignment expectation.
-    stats_.art_method_bytes += RoundUp(method_section.Size(), sizeof(uint64_t));
+    stats_.art_method_bytes += method_section.Size();
     stats_.interned_strings_bytes += intern_section.Size();
     stats_.Dump(os);
     os << "\n";
@@ -1837,14 +1836,10 @@ class ImageDumper {
         state->stats_.pc_mapping_table_bytes += pc_mapping_table_bytes;
       }
 
-      size_t vmap_table_bytes = 0u;
-      if (!method->IsOptimized(image_pointer_size)) {
-        // Method compiled with the optimizing compiler have no vmap table.
-        vmap_table_bytes = state->ComputeOatSize(
-            method->GetVmapTable(image_pointer_size), &first_occurrence);
-        if (first_occurrence) {
-          state->stats_.vmap_table_bytes += vmap_table_bytes;
-        }
+      size_t vmap_table_bytes = state->ComputeOatSize(
+          method->GetVmapTable(image_pointer_size), &first_occurrence);
+      if (first_occurrence) {
+        state->stats_.vmap_table_bytes += vmap_table_bytes;
       }
 
       const void* quick_oat_code_begin = state->GetQuickOatCodeBegin(method);
